@@ -19,3 +19,5 @@ Thinks to do:
 - ~~Make sure, that the Miners are Stopp when the GUI Closed.~~ Finish in Version 0.0.7
 
 You can reach me under BMP@gmx.de or an Telegram under https://t.me/HTMLmining (Marcus Berger)
+
+Download: https://github.com/BMP0007/HTMLCoin-Windows-Miner/raw/master/MinerGUI.zip 
