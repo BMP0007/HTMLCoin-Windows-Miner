@@ -1,6 +1,6 @@
-# HTMLCoin-Windows-Miner Version 0.0.5
+# HTMLCoin-Windows-Miner Version 0.0.7
 
-Its only a GUI (grafic user interface) for the official (https://github.com/HTMLCOIN/HTMLCOIN/releases) htmlcoin-cli.exe.
+Its only a **GUI** (grafic user interface) for the official (https://github.com/HTMLCOIN/HTMLCOIN/releases) **htmlcoin-cli.exe**.
 You must have install a HTML-Wallet, but it can be empty (the App will say it to you). 
 
 The WindowsMiner.exe start the GUI for Mining HTML Coins.
@@ -11,9 +11,11 @@ Its a very young ALPHA Version and i must put in some more work...
 
 Thinks to do:
 
-1. Save the HTMLCoin Adress for a restart.
-2. An Option for the search deep (99999999).
-3. Make sure, that the Miners are Stopp when the GUI Closed.
-4. Merge Bugs you tell me.....
+[ ] Show a report if we have found a Block.
+[ ] Merge Bugs you tell me.....
+[x] ~~Save the HTMLCoin Adress for a restart.~~
+[x] ~~An Option for the search deep (99999999).~~
+[x] ~~Make sure, that the Miners are Stopp when the GUI Closed.~~
+[ ] Merge Bugs you tell me.....
 
 You can reach me under BMP@gmx.de or an Telegram under https://t.me/HTMLmining (Marcus Berger)
