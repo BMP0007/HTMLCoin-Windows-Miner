@@ -1,4 +1,4 @@
-;Version 0.0.7
+;Version 0.0.71
 ;Copyright Marcus Berger / BMP@gmx
 
 #NoTrayIcon
@@ -166,7 +166,7 @@ Start:
 		; Using 'true' above and the call below allows the script to remain responsive.
 		whr.WaitForResponse()
 		version := whr.ResponseText
-		if (version = "0.0.7")
+		if (version = "0.0.71")
 			{
 			Gosub, Start
 			}
@@ -180,7 +180,7 @@ Start:
 				}
 			IfMsgBox Yes
 				{
-				run, http://nwa.marcusberger.de/MinerGUI.zip
+				run, https://github.com/BMP0007/HTMLCoin-Windows-Miner/raw/master/MinerGUI.zip
 				MsgBox, 0,Update, Please Download it and replase the folder...
 				ExitApp
 				}
@@ -191,7 +191,7 @@ GuiEscape:
 GuiClose:
 
 ButtonCancel:
-		MsgBox, 262192, DONATE, Please Donate for this App....
+		MsgBox, 262192, DONATE, Please Donate for this App....`n`n
 		Tooltip, Shutdown...
 		Run, %A_ScriptDir%\htmlcoin-cli.exe stop,, Hide
 		Run, %comspec% /c taskkill /F /IM Miner.exe,, Hide
