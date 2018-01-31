@@ -1,0 +1,202 @@
+;Version 0.0.7
+;Copyright Marcus Berger / BMP@gmx
+
+#NoTrayIcon
+LOG := A_ScriptDir . "\logrg.txt" 
+Nothing = a
+b=0
+
+IfNotExist, %A_ScriptDir%\Miner.ini
+		{
+		WDatei=%appdata%\HTMLCOIN\wallet.dat
+		if !FileExist(WDatei)
+			{
+			msgBox,,QT-Wallet, I cant find the HTML-Wallet.`nPlease show me where it is....
+			FileSelectFile, walletDAT, ,%appdata%, , wallet.dat	
+				if errorlevel = 1
+					{
+					MsgBox,,QT-Wallet, I cant find the HTML-Wallet.`nPlease Download and Install it.
+					run, https://github.com/HTMLCOIN/HTMLCOIN/releases	
+					exitapp 
+					}
+			IniWrite, %walletDAT%, %A_ScriptDir%\Miner.ini, WalletPfad, wallet
+			}
+		if FileExist(WDatei)	
+		walletDAT = %appdata%\HTMLCOIN\wallet.dat
+		IniWrite, %walletDAT%, Miner.ini, WalletPfad, wallet
+		}
+		
+IniRead, wallet, %A_ScriptDir%\Miner.ini, WalletPfad, wallet
+IniRead, search, %A_ScriptDir%\Miner.ini, Option, search, 999999999
+IniRead, HTMLAdress, %A_ScriptDir%\Miner.ini, Option, HTMLAdress, HdTjPZuBtx6BTC6yKwkFPe1qtjyiizFWob
+
+
+Wallet:
+Process, Exist, htmlcoin-qt.exe
+	IF !errorlevel=0
+	{
+    msgbox, The Wallet is Open...`n`nYou must Close it first ! 
+	exitapp
+	}
+	
+Gosub, Updater
+
+Start:
+	Gui, Destroy
+	Gui, Add, Tab2,, Start|Donate|About 
+	Gui, Add, Text,, Please put in the search Option:
+	Gui, Add, Edit, W220 vsearch, %search%
+	Gui, Add, Text,, Please put in the HTML Coins Adress:
+	Gui, Add, Edit, W220 vHTMLAdress, %HTMLAdress%
+	Gui, Add, Text,, Please choose how many Miners you want to run:
+	Gui, Add, DropDownList, vMiner Choose2 W50, 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32
+	Gui, Add, Text, W220 vMiners, Miners: OFF
+	Gui, Add, Button, vSTART default xm+10 ym+190, Start-Mining  
+	Gui, Add, Button, vSTOPP xm+190 ym+190, Stop-Mining
+
+	Gui, Tab, 2
+	Gui, Font, s10 cGreen
+	Gui, Add, Text,h10, `nI make this App in my leisure time.`nPlease donate some HTML Coins for Beer. 
+	Gui, Add, Link,, <a href="https://html.mastercalls.io/address/HdTjPZuBtx6BTC6yKwkFPe1qtjyiizFWob">HdTjPZuBtx6BTC6yKwkFPe1qtjyiizFWob</a>
+
+	Gui, Tab, 3
+	Gui, Font,
+	Gui, Add, Text,h10, `nWindows Miner Ver. %version% `n`nContact:
+	Gui, Add, Link,, <a href="mailto:BMP@gmx.de?subject=Windows Miner Ver. 0.0.2">BMP@gmx.de</a>
+	Gui, Add, Link,, <a href="https://t.me/HTMLmining">Telegram HTMLCoin Mining</a>
+	
+	Gui, Tab  
+	Gui, Show, ,HTMLCoin Miner
+	Pause
+	return
+
+
+	ButtonStart-Mining:
+		Gui, Submit  ; Save each control's contents to its associated variable.
+		
+		IniWrite, %search%, Miner.ini, Option, search
+		IniWrite, %HTMLAdress%, Miner.ini, Option, HTMLAdress
+		
+		Gui, Show
+		if search between 999999 and 999999999
+			Gosub, Daemon
+		else
+			{
+			MsgBox, Search Option must be between 999999 and 999999999
+			Gosub, Start
+				pause
+			}
+		
+		
+	Daemon:
+		Gui, Font, cOrange 
+		GuiControl, Font, Miners
+		GuiControl,,Miners, Miners: Starting Daemon..
+		GuiControl,Hide, START, 
+		FileDelete, %appdata%\HTMLCOIN\debug.log
+		Run, %A_ScriptDir%\htmlcoind.exe --debug=1 --shrinkdebugfile,, Hide
+		sleep 10000
+		Gosub, Connection
+		
+		
+	Connection:
+		Gui, Font, cOrange 
+		GuiControl, Font, Miners
+		GuiControl,,Miners, Miners: Check Connection...
+		FileDelete, %appdata%\HTMLCOIN\debug.log
+		SearchString=received
+		Line := False
+		Loop, Read, %appdata%\HTMLCOIN\debug.log
+		{
+			If !Trim(A_LoopReadLine)
+				Continue
+			If InStr(A_LoopReadLine, SearchString)
+				{
+					Line := A_LoopReadLine
+					Continue ;second concerned line
+				}
+			If Line
+				{
+					Line .= "`r`n" . A_LoopReadLine
+					break
+				}
+		}
+		if (Line = 0)
+			{
+			sleep 1000
+			Gosub, Connection
+			}
+		else
+			{
+			Gosub, StartMiner
+			sleep 1000
+			}
+	
+		
+	StartMiner:	
+		loop, %Miner%
+			{
+			Run, %A_ScriptDir%\Miner.exe %A_Index% %HTMLAdress% %search%,, Hide
+			}
+		Gui, Font, cGreen 
+		GuiControl, Font, Miners
+		GuiControl,,Miners, Miners: WORKING......
+		Gosub looping
+		
+
+
+	ButtonStop-Mining:
+		RunWait, %A_ScriptDir%\htmlcoin-cli.exe stop,, Hide
+		RunWait, %comspec% /c taskkill /F /IM Miner.exe,, Hide
+		RunWait, %comspec% /c taskkill /F /IM htmlcoin*,, Hide
+		Gui, Font, cGBlack 
+		GuiControl, Font, Miners
+		GuiControl,Show, START,
+		GuiControl,,Miners, Miners: Stopped.
+		Gosub ende
+		
+
+		
+	Updater:
+		url := "http://nwa.marcusberger.de/VersionMiner.txt"
+
+		whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+		whr.Open("GET", url, true)
+		whr.Send()
+		; Using 'true' above and the call below allows the script to remain responsive.
+		whr.WaitForResponse()
+		version := whr.ResponseText
+		if (version = "0.0.7")
+			{
+			Gosub, Start
+			}
+			else
+			{
+			MsgBox,4,Update,  There is a newer Version %Version% of this Tool out!`n`nShould we download it now ?
+			IfMsgBox No
+				{
+				MsgBox,,WRONG ANSWER, Sorry, but this Version is outdated...`nTry it again....
+				ExitApp
+				}
+			IfMsgBox Yes
+				{
+				run, http://nwa.marcusberger.de/MinerGUI.zip
+				MsgBox, 0,Update, Please Download it and replase the folder...
+				ExitApp
+				}
+			return
+			}
+				
+GuiEscape:
+GuiClose:
+
+ButtonCancel:
+		MsgBox, 262192, DONATE, Please Donate for this App....
+		Tooltip, Shutdown...
+		Run, %A_ScriptDir%\htmlcoin-cli.exe stop,, Hide
+		Run, %comspec% /c taskkill /F /IM Miner.exe,, Hide
+		Run, %comspec% /c taskkill /F /IM htmlcoin*,, Hide
+		ExitApp		
+looping:
+
+ende:
