@@ -1,30 +1,39 @@
-;Version 0.0.7
+;Version 0.0.8
 ;Copyright Marcus Berger / BMP@gmx
 
 #SingleInstance off
 #Persistent
 #NoTrayIcon
 
-SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
-for n, param in A_Args  ; Für jeden Parameter:
+SetWorkingDir %A_ScriptDir% 
+for n, param in A_Args  
 LOG := A_ScriptDir . ("\Miner-" A_Args[1] ".log")
-LOG1 :=  ("Output-" A_Args[1] ".log")
-
-If A_Args[2] = "" 
-    GoSub, Ende	
+If A_Args[2] = ""
+    GoSub, Ende
 
 loop,
 			{
 				FormatTime, Date,, MM-dd-yyyy
-				FormatTime, Time,, hh:mm:ss tt
+				FormatTime, Time, T8, hh:mm:ss 
 				Befehl1 := "htmlcoin-cli.exe generatetoaddress 101"
 				Befehl2 := A_Args[2]
-				Befehl3 := "9999999"
 				Befehl4 := ">>"
-				CMD = `"%Befehl1% %Befehl2% %param% %Befehl4%%LOG1%`"
-				FileAppend, `nDate:%Date% Time:%Time% Loop #:%A_Index% Miner #:%1%`n%cmd%, %LOG%
-				RunWait, %comspec% /c %CMD%, ,Hide
+				CMD1 = echo Date:%Date% Time:%Time% Loop #:%A_Index% Miner #:%1% - >> `"%LOG%`" 2>&1
+				CMD2 = `"%Befehl1% %Befehl2% %param% %Befehl4%`"%LOG%`" 2>&1`"
+				RunWait, %comspec% /c %CMD1%, ,Hide
+				RunWait, %comspec% /c %CMD2%, ,Hide
+				Loop, read, %LOG%
+					last_line := A_Index
+					EINS := last_line-1
+					ZWEI := last_line-2
+				FileReadLine, lineEINS, %LOG%, %EINS%	
+				FileReadLine, lineZWEI, %LOG%, %ZWEI%
+				FileReadLine, lineLAST, %LOG%, %last_line%
+				FileAppend, %lineZWEI% %lineEINS% %lineLAST%`n, Results.txt
+				FileDelete, %A_ScriptDir%\Miner-*.log
 			}
-		return	
+return	
+
 Ende:
 MsgBox, You cant Start Miner.exe direct.`n`nPlease Start WindowsMiner.exe !!!
+			
