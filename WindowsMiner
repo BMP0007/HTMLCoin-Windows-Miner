@@ -158,7 +158,7 @@ Start:
 		GuiControl, Font, Miners
 		GuiControl,Show, START,
 		GuiControl,,Miners, Miners: Stopped.
-		Gosub ende
+		Gosub ButtonCancel
 		
 
 		
