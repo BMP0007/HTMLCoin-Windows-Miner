@@ -1,4 +1,4 @@
-# HTMLCoin-Windows-Miner Version 0.0.71
+# HTMLCoin-Windows-Miner Version 0.0.8
 **htmlcoin-cli Version 2.0.1.0**
 
 Its only a **GUI** (grafic user interface) for the official (https://github.com/HTMLCOIN/HTMLCOIN/releases) **htmlcoin-cli.exe**.
