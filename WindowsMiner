@@ -1,4 +1,4 @@
-;Version 0.0.71
+;Version 0.0.8
 ;Copyright Marcus Berger / BMP@gmx
 
 #NoTrayIcon
@@ -43,37 +43,42 @@ Gosub, Updater
 
 Start:
 	Gui, Destroy
-	Gui, Add, Tab2,, Start|Donate|About 
+	Gui, Add, Tab3, x0 y0 w402 h320 , Start|Logging|Donate|About 
 	Gui, Add, Text,, Please put in the search Option:
 	Gui, Add, Edit, W220 vsearch, %search%
 	Gui, Add, Text,, Please put in the HTML Coins Adress:
-	Gui, Add, Edit, W220 vHTMLAdress, %HTMLAdress%
+	Gui, Add, Edit, W280 vHTMLAdress, %HTMLAdress%
 	Gui, Add, Text,, Please choose how many Miners you want to run:
 	Gui, Add, DropDownList, vMiner Choose2 W50, 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32
 	Gui, Add, Text, W220 vMiners, Miners: OFF
-	Gui, Add, Button, vSTART default xm+10 ym+190, Start-Mining  
-	Gui, Add, Button, vSTOPP xm+190 ym+190, Stop-Mining
-
+	Gui, Add, Button, vSTART default xm+10 ym+230, Start-Mining  
+	Gui, Add, Button, vSTOPP xm+190 ym+230, Stop-Mining
+	
 	Gui, Tab, 2
+	Gui, Add, Text,, Last Log:
+	Gui, Add, Text, vLoggTxt w300 h300, 
+
+
+
+	Gui, Tab, 3
 	Gui, Font, s10 cGreen
 	Gui, Add, Text,h10, `nI make this App in my leisure time.`nPlease donate some HTML Coins for Beer. 
 	Gui, Add, Link,, <a href="https://html.mastercalls.io/address/HdTjPZuBtx6BTC6yKwkFPe1qtjyiizFWob">HdTjPZuBtx6BTC6yKwkFPe1qtjyiizFWob</a>
 
-	Gui, Tab, 3
+	Gui, Tab, 4
 	Gui, Font,
 	Gui, Add, Text,h10, `nWindows Miner Ver. %version% `n`nContact:
-	Gui, Add, Link,, <a href="mailto:BMP@gmx.de?subject=Windows Miner Ver. 0.0.2">BMP@gmx.de</a>
+	Gui, Add, Link,, <a href="mailto:BMP@gmx.de?subject=Windows Miner">BMP@gmx.de</a>
 	Gui, Add, Link,, <a href="https://t.me/HTMLmining">Telegram HTMLCoin Mining</a>
 	
 	Gui, Tab  
-	Gui, Show, ,HTMLCoin Miner
+	Gui, Show, ,HTMLCoin Miner Ver.: %version%
 	Pause
 	return
 
 
 	ButtonStart-Mining:
 		Gui, Submit  ; Save each control's contents to its associated variable.
-		
 		IniWrite, %search%, Miner.ini, Option, search
 		IniWrite, %HTMLAdress%, Miner.ini, Option, HTMLAdress
 		
@@ -136,12 +141,12 @@ Start:
 	StartMiner:	
 		loop, %Miner%
 			{
-			Run, %A_ScriptDir%\Miner.exe %A_Index% %HTMLAdress% %search%,, Hide
+			Run, %A_ScriptDir%\Miner.exe %A_Index% %HTMLAdress% %search%,, Hide 
 			}
 		Gui, Font, cGreen 
 		GuiControl, Font, Miners
 		GuiControl,,Miners, Miners: WORKING......
-		Gosub looping
+		Gosub, looping
 		
 
 
@@ -166,7 +171,7 @@ Start:
 		; Using 'true' above and the call below allows the script to remain responsive.
 		whr.WaitForResponse()
 		version := whr.ResponseText
-		if (version = "0.0.71")
+		if (version = "0.0.8")
 			{
 			Gosub, Start
 			}
@@ -197,6 +202,33 @@ ButtonCancel:
 		Run, %comspec% /c taskkill /F /IM Miner.exe,, Hide
 		Run, %comspec% /c taskkill /F /IM htmlcoin*,, Hide
 		ExitApp		
-looping:
 
+looping:
+				LOG = %A_ScriptDir%\Results.txt
+				
+				Loop, read, %LOG%
+					last_line := A_Index
+					EINS := last_line-1
+					ZWEI := last_line-2
+					DREI := last_line-3
+					VIER := last_line-4
+					FUNF := last_line-5		
+					SECH := last_line-6						
+				FileReadLine, lineEINS, %LOG%, %EINS%	
+				FileReadLine, lineZWEI, %LOG%, %ZWEI%
+				FileReadLine, lineDREI, %LOG%, %DREI%
+				FileReadLine, lineVIER, %LOG%, %VIER%
+				FileReadLine, lineFUNF, %LOG%, %FUNF%
+				FileReadLine, lineSECH, %LOG%, %SECH%
+				FileReadLine, lineLAST, %LOG%, %last_line%
+				FileAppend, %lineSECH%`n%lineFUNF%`n%lineVIER%`n%lineDREI%`n%lineZWEI%`n%lineEINS%`n%lineLAST%`n, tmp
+				FileRead, readtmp, tmp
+				FileDelete, tmp
+
+				GuiControl,,LoggTxt, %readtmp%
+				sleep 5000
+				Gosub, looping ;TODO
+		
+				
+return
 ende:
