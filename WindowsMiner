@@ -1,4 +1,4 @@
-;Version 0.0.8
+;Version 0.0.81
 ;Copyright Marcus Berger / BMP@gmx
 
 #NoTrayIcon
@@ -30,6 +30,10 @@ IniRead, wallet, %A_ScriptDir%\Miner.ini, WalletPfad, wallet
 IniRead, search, %A_ScriptDir%\Miner.ini, Option, search, 999999999
 IniRead, HTMLAdress, %A_ScriptDir%\Miner.ini, Option, HTMLAdress, HdTjPZuBtx6BTC6yKwkFPe1qtjyiizFWob
 
+LOG = %A_ScriptDir%\Results.txt
+FileAppend, Start the App`n, Results.txt
+
+
 
 Wallet:
 Process, Exist, htmlcoin-qt.exe
@@ -45,7 +49,7 @@ Start:
 	Gui, Destroy
 	Gui, Add, Tab3, x0 y0 w402 h320 , Start|Logging|Donate|About 
 	Gui, Add, Text,, Please put in the search Option:
-	Gui, Add, Edit, W220 vsearch, %search%
+	Gui, Add, Edit, W240 vsearch, %search%
 	Gui, Add, Text,, Please put in the HTML Coins Adress:
 	Gui, Add, Edit, W280 vHTMLAdress, %HTMLAdress%
 	Gui, Add, Text,, Please choose how many Miners you want to run:
@@ -55,9 +59,12 @@ Start:
 	Gui, Add, Button, vSTOPP xm+190 ym+230, Stop-Mining
 	
 	Gui, Tab, 2
-	Gui, Add, Text,, Last Log:
-	Gui, Add, Text, vLoggTxt w300 h300, 
-
+	Gui, Add, Text,x290 y30 gLink1 vLink1, Open full Log...
+	Gui, Font, Underline cBlue
+	GuiControl, Font, Link1
+	Gui, Font, 
+	Gui, Add, Text,x10 y30 , Last Log:
+	Gui, Add, edit, vLoggTxt w370 h250 ReadOnly -WantCtrlA, 
 
 
 	Gui, Tab, 3
@@ -142,6 +149,7 @@ Start:
 		loop, %Miner%
 			{
 			Run, %A_ScriptDir%\Miner.exe %A_Index% %HTMLAdress% %search%,, Hide 
+			sleep 6000
 			}
 		Gui, Font, cGreen 
 		GuiControl, Font, Miners
@@ -171,7 +179,7 @@ Start:
 		; Using 'true' above and the call below allows the script to remain responsive.
 		whr.WaitForResponse()
 		version := whr.ResponseText
-		if (version = "0.0.8")
+		if (version = "0.0.81")
 			{
 			Gosub, Start
 			}
@@ -201,34 +209,63 @@ ButtonCancel:
 		Run, %A_ScriptDir%\htmlcoin-cli.exe stop,, Hide
 		Run, %comspec% /c taskkill /F /IM Miner.exe,, Hide
 		Run, %comspec% /c taskkill /F /IM htmlcoin*,, Hide
+		FileDelete, %A_ScriptDir%\Miner-*.log
 		ExitApp		
 
-looping:
-				LOG = %A_ScriptDir%\Results.txt
-				
-				Loop, read, %LOG%
-					last_line := A_Index
-					EINS := last_line-1
-					ZWEI := last_line-2
-					DREI := last_line-3
-					VIER := last_line-4
-					FUNF := last_line-5		
-					SECH := last_line-6						
-				FileReadLine, lineEINS, %LOG%, %EINS%	
-				FileReadLine, lineZWEI, %LOG%, %ZWEI%
-				FileReadLine, lineDREI, %LOG%, %DREI%
-				FileReadLine, lineVIER, %LOG%, %VIER%
-				FileReadLine, lineFUNF, %LOG%, %FUNF%
-				FileReadLine, lineSECH, %LOG%, %SECH%
-				FileReadLine, lineLAST, %LOG%, %last_line%
-				FileAppend, %lineSECH%`n%lineFUNF%`n%lineVIER%`n%lineDREI%`n%lineZWEI%`n%lineEINS%`n%lineLAST%`n, tmp
-				FileRead, readtmp, tmp
-				FileDelete, tmp
+		Link1:
+		run, %A_ScriptDir%\Results.txt
+		return
 
-				GuiControl,,LoggTxt, %readtmp%
-				sleep 5000
-				Gosub, looping ;TODO
-		
-				
+
+
+looping:
+			TXT := ""
+			LOG = %A_ScriptDir%\Results.txt
+			Found = %A_ScriptDir%\Found.txt
+			Fileread, Bingo, %Found%
+			Loop, read, %LOG%
+					last_line := A_Index
+					if A_Index>32
+						{
+						Zahl = 32
+						}
+					else
+						{
+						Zahl = %last_line%
+						}
+					loop, %Zahl%
+					{
+						OLDLine := TXT
+						FileReadLine, last_lineTXT, %LOG%, %last_line%
+						StringSplit, TxtSP, last_lineTXT,[ ,
+						StringLen, laenge, TxtSP2
+						StringSplit, FO, TxtSP2,] ,
+						if laenge >= 3
+								ifNotInString, Bingo, %Fo1%
+								{	
+										fou := "" . TxtSP2
+										StringSplit, found, fou,] ,
+										SplashTextOn,600,60,HTMLCOIN FOUND,We have a HIT:`n%found1%
+											Loop, 30
+												{
+													Gui, +AlwaysOnTop
+													WinSet, AlwaysOnTop, On, HTMLCOIN FOUND
+													Gui Flash
+													Sleep, 100
+												}
+										Gui, -AlwaysOnTop
+										WinMove, HTMLCOIN FOUND, , 0, 0 
+										FileAppend, %found1%, %Found%
+										sleep 30000
+										SplashTextOff
+								}
+						TXT := "`n" . last_lineTXT . OLDLine
+						last_line--
+					}	
+														
+				GuiControl,,LoggTxt, %txt%
+				read = ""
+				sleep 20000
+				Gosub, looping ;TODO	
 return
 ende:
