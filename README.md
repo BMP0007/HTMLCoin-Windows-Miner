@@ -1,4 +1,4 @@
-# HTMLCoin-Windows-Miner Version 0.0.8
+# HTMLCoin-Windows-Miner Version 0.0.81
 **htmlcoin-cli Version 2.0.1.0**
 
 Its only a **GUI** (grafic user interface) for the official (https://github.com/HTMLCOIN/HTMLCOIN/releases) **htmlcoin-cli.exe**.
@@ -12,8 +12,8 @@ Its a very young ALPHA Version and i must put in some more work...
 
 Thinks to do:
 
-- Show a report if we have found a Block.
 - Merge Bugs you tell me.....
+- ~~Show a report if we have found a Block. ~~
 - ~~Open Sourcecode - later if i have become some more Donate HTMls...~~
 - ~~Save the HTMLCoin Adress for a restart.~~ Finish in Version 0.0.7
 - ~~An Option for the search deep (99999999).~~ Finish in Version 0.0.7
