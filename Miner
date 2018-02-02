@@ -1,6 +1,5 @@
 ;Version 0.0.8
 ;Copyright Marcus Berger / BMP@gmx
-
 #SingleInstance off
 #Persistent
 #NoTrayIcon
