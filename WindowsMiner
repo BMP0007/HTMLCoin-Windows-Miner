@@ -1,8 +1,7 @@
-;Version 0.0.81
+;Version 0.0.82
 ;Copyright Marcus Berger / BMP@gmx
 
 #NoTrayIcon
-LOG := A_ScriptDir . "\logrg.txt" 
 Nothing = a
 b=0
 
@@ -27,11 +26,14 @@ IfNotExist, %A_ScriptDir%\Miner.ini
 		}
 		
 IniRead, wallet, %A_ScriptDir%\Miner.ini, WalletPfad, wallet
-IniRead, search, %A_ScriptDir%\Miner.ini, Option, search, 999999999
+IniRead, search, %A_ScriptDir%\Miner.ini, Option, search, 9999999
 IniRead, HTMLAdress, %A_ScriptDir%\Miner.ini, Option, HTMLAdress, HdTjPZuBtx6BTC6yKwkFPe1qtjyiizFWob
-
+FormatTime, Date,, MM-dd-yyyy
+FormatTime, Time, T8, hh:mm:ss 
 LOG = %A_ScriptDir%\Results.txt
-FileAppend, Start the App`n, Results.txt
+FileDelete, %LOG%
+FileDelete, %A_ScriptDir%\Miner-*.log
+FileAppend, Date:%Date% Time:%Time% - Start the App`n, %LOG%
 
 
 
@@ -47,7 +49,7 @@ Gosub, Updater
 
 Start:
 	Gui, Destroy
-	Gui, Add, Tab3, x0 y0 w402 h320 , Start|Logging|Donate|About 
+	Gui, Add, Tab3, x0 y0 w402 h320 , Start|Logging|About 
 	Gui, Add, Text,, Please put in the search Option:
 	Gui, Add, Edit, W240 vsearch, %search%
 	Gui, Add, Text,, Please put in the HTML Coins Adress:
@@ -66,17 +68,13 @@ Start:
 	Gui, Add, Text,x10 y30 , Last Log:
 	Gui, Add, edit, vLoggTxt w370 h250 ReadOnly -WantCtrlA, 
 
-
 	Gui, Tab, 3
-	Gui, Font, s10 cGreen
-	Gui, Add, Text,h10, `nI make this App in my leisure time.`nPlease donate some HTML Coins for Beer. 
-	Gui, Add, Link,, <a href="https://html.mastercalls.io/address/HdTjPZuBtx6BTC6yKwkFPe1qtjyiizFWob">HdTjPZuBtx6BTC6yKwkFPe1qtjyiizFWob</a>
-
-	Gui, Tab, 4
 	Gui, Font,
 	Gui, Add, Text,h10, `nWindows Miner Ver. %version% `n`nContact:
 	Gui, Add, Link,, <a href="mailto:BMP@gmx.de?subject=Windows Miner">BMP@gmx.de</a>
-	Gui, Add, Link,, <a href="https://t.me/HTMLmining">Telegram HTMLCoin Mining</a>
+	Gui, Add, Link,, <a href="https://t.me/joinchat/CQE0Qk0YOp2KjaLZnyxU5g">Telegram: HTMLCoin Mining GER</a>
+	Gui, Add, Text,h10, `nI make this App in my leisure time.`nPlease donate some HTML Coins for Beer. 
+	Gui, Add, Link,, <a href="https://html.mastercalls.io/address/HdTjPZuBtx6BTC6yKwkFPe1qtjyiizFWob">HdTjPZuBtx6BTC6yKwkFPe1qtjyiizFWob</a>
 	
 	Gui, Tab  
 	Gui, Show, ,HTMLCoin Miner Ver.: %version%
@@ -90,11 +88,11 @@ Start:
 		IniWrite, %HTMLAdress%, Miner.ini, Option, HTMLAdress
 		
 		Gui, Show
-		if search between 999999 and 999999999
+		if search between 999999 and 9999999
 			Gosub, Daemon
 		else
 			{
-			MsgBox, Search Option must be between 999999 and 999999999
+			MsgBox, Search Option must be between 999999 and 9999999
 			Gosub, Start
 				pause
 			}
@@ -106,7 +104,11 @@ Start:
 		GuiControl,,Miners, Miners: Starting Daemon..
 		GuiControl,Hide, START, 
 		FileDelete, %appdata%\HTMLCOIN\debug.log
-		Run, %A_ScriptDir%\htmlcoind.exe --debug=1 --shrinkdebugfile,, Hide
+		FormatTime, Date,, MM-dd-yyyy
+		FormatTime, Time, T8, hh:mm:ss 
+		FileAppend, Date:%Date% Time:%Time% - Start the Daemon`n, %Log%
+		FileAppend, Date:%Date% Time:%Time% - htmlcoind.exe --debug=1 --shrinkdebugfile --rpcthreads=%Miner%`n, %Log%		
+		Run, %A_ScriptDir%\htmlcoind.exe --debug=1 --shrinkdebugfile --rpcthreads=%Miner%,, Hide
 		sleep 10000
 		Gosub, Connection
 		
@@ -118,6 +120,10 @@ Start:
 		FileDelete, %appdata%\HTMLCOIN\debug.log
 		SearchString=received
 		Line := False
+		
+		FormatTime, Date,, MM-dd-yyyy
+		FormatTime, Time, T8, hh:mm:ss 
+		FileAppend, Date:%Date% Time:%Time% - Check Connections`n, %Log%
 		Loop, Read, %appdata%\HTMLCOIN\debug.log
 		{
 			If !Trim(A_LoopReadLine)
@@ -140,16 +146,26 @@ Start:
 			}
 		else
 			{
+			FormatTime, Date,, MM-dd-yyyy
+			FormatTime, Time, T8, hh:mm:ss 
+			FileAppend, Date:%Date% Time:%Time% - Connection found`n, %Log%
+			Loop, Read, %appdata%\HTMLCOIN\debug.log
+			GuiControl, Font, Miners
+			GuiControl,,Miners, Miners: Miners starting......
 			Gosub, StartMiner
-			sleep 1000
+			sleep 2000
 			}
 	
 		
 	StartMiner:	
 		loop, %Miner%
 			{
-			Run, %A_ScriptDir%\Miner.exe %A_Index% %HTMLAdress% %search%,, Hide 
-			sleep 6000
+					Run, %A_ScriptDir%\Miner.exe %A_Index% %HTMLAdress% %search%,, Hide 		
+					FormatTime, Date,, MM-dd-yyyy
+					FormatTime, Time, T8, hh:mm:ss 
+					FileAppend, Date:%Date% Time:%Time% - Start Miner %A_Index%`n, %Log%
+					;Loop, Read, %appdata%\HTMLCOIN\debug.log
+					sleep 6000
 			}
 		Gui, Font, cGreen 
 		GuiControl, Font, Miners
@@ -159,6 +175,9 @@ Start:
 
 
 	ButtonStop-Mining:
+		FormatTime, Date,, MM-dd-yyyy
+		FormatTime, Time, T8, hh:mm:ss 
+		FileAppend, Date:%Date% Time:%Time% - Stopp Miner`n, %Log%
 		RunWait, %A_ScriptDir%\htmlcoin-cli.exe stop,, Hide
 		RunWait, %comspec% /c taskkill /F /IM Miner.exe,, Hide
 		RunWait, %comspec% /c taskkill /F /IM htmlcoin*,, Hide
@@ -172,14 +191,13 @@ Start:
 		
 	Updater:
 		url := "http://nwa.marcusberger.de/VersionMiner.txt"
-
 		whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 		whr.Open("GET", url, true)
 		whr.Send()
 		; Using 'true' above and the call below allows the script to remain responsive.
 		whr.WaitForResponse()
 		version := whr.ResponseText
-		if (version = "0.0.81")
+		if (version = "0.0.82")
 			{
 			Gosub, Start
 			}
@@ -202,9 +220,11 @@ Start:
 				
 GuiEscape:
 GuiClose:
-
 ButtonCancel:
-		MsgBox, 262192, DONATE, Please Donate for this App....`n`n
+
+		FormatTime, Date,, MM-dd-yyyy
+		FormatTime, Time, T8, hh:mm:ss 
+		FileAppend, Date:%Date% Time:%Time% - Stopp App`n, %Log%
 		Tooltip, Shutdown...
 		Run, %A_ScriptDir%\htmlcoin-cli.exe stop,, Hide
 		Run, %comspec% /c taskkill /F /IM Miner.exe,, Hide
@@ -215,7 +235,6 @@ ButtonCancel:
 		Link1:
 		run, %A_ScriptDir%\Results.txt
 		return
-
 
 
 looping:
@@ -264,8 +283,10 @@ looping:
 					}	
 														
 				GuiControl,,LoggTxt, %txt%
+				txt = ""
 				read = ""
-				sleep 20000
-				Gosub, looping ;TODO	
-return
+				sleep 30000
+				gosub, looping
+				
+				
 ende:
