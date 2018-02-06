@@ -1,38 +1,298 @@
-;Version 0.0.8
+;Version 0.0.83
 ;Copyright Marcus Berger / BMP@gmx
-#SingleInstance off
-#Persistent
+
 #NoTrayIcon
+Nothing = a
+b=0
 
-SetWorkingDir %A_ScriptDir% 
-for n, param in A_Args  
-LOG := A_ScriptDir . ("\Miner-" A_Args[1] ".log")
-If A_Args[2] = ""
-    GoSub, Ende
-
-loop,
+IfNotExist, %A_ScriptDir%\Miner.ini
+		{
+		WDatei=%appdata%\HTMLCOIN\wallet.dat
+		if !FileExist(WDatei)
 			{
-				FormatTime, Date,, MM-dd-yyyy
-				FormatTime, Time, T8, hh:mm:ss 
-				Befehl1 := "htmlcoin-cli.exe generatetoaddress 101"
-				Befehl2 := A_Args[2]
-				Befehl4 := ">>"
-				CMD1 = echo Date:%Date% Time:%Time% Loop #:%A_Index% Miner #:%1% - >> `"%LOG%`" 2>&1
-				CMD2 = `"%Befehl1% %Befehl2% %param% %Befehl4%`"%LOG%`" 2>&1`"
-				RunWait, %comspec% /c %CMD1%, ,Hide
-				RunWait, %comspec% /c %CMD2%, ,Hide
-				Loop, read, %LOG%
-					last_line := A_Index
-					EINS := last_line-1
-					ZWEI := last_line-2
-				FileReadLine, lineEINS, %LOG%, %EINS%	
-				FileReadLine, lineZWEI, %LOG%, %ZWEI%
-				FileReadLine, lineLAST, %LOG%, %last_line%
-				FileAppend, %lineZWEI% %lineEINS% %lineLAST%`n, Results.txt
-				FileDelete, %A_ScriptDir%\Miner-*.log
+			msgBox,,QT-Wallet, I cant find the HTML-Wallet.`nPlease show me where it is....
+			FileSelectFile, walletDAT, ,%appdata%, , wallet.dat	
+				if errorlevel = 1
+					{
+					MsgBox,,QT-Wallet, I cant find the HTML-Wallet.`nPlease Download and Install it.
+					run, https://github.com/HTMLCOIN/HTMLCOIN/releases	
+					exitapp 
+					}
+			IniWrite, %walletDAT%, %A_ScriptDir%\Miner.ini, WalletPfad, wallet
 			}
-return	
+		if FileExist(WDatei)	
+		walletDAT = %appdata%\HTMLCOIN\wallet.dat
+		IniWrite, %walletDAT%, Miner.ini, WalletPfad, wallet
+		}
+		
+IniRead, wallet, %A_ScriptDir%\Miner.ini, WalletPfad, wallet
+IniRead, search, %A_ScriptDir%\Miner.ini, Option, search, 9999999
+IniRead, HTMLAdress, %A_ScriptDir%\Miner.ini, Option, HTMLAdress, HdTjPZuBtx6BTC6yKwkFPe1qtjyiizFWob
+FormatTime, Date,, MM-dd-yyyy
+FormatTime, Time, T8, hh:mm:ss 
+LOG = %A_ScriptDir%\Results.txt
+FileDelete, %LOG%
+FileDelete, %A_ScriptDir%\Miner-*.log
+FileAppend, Date:%Date% Time:%Time% - Start the App`n, %LOG%
 
-Ende:
-MsgBox, You cant Start Miner.exe direct.`n`nPlease Start WindowsMiner.exe !!!
-			
+
+
+Wallet:
+Process, Exist, htmlcoin-qt.exe
+	IF !errorlevel=0
+	{
+    msgbox, The Wallet is Open...`n`nYou must Close it first ! 
+	exitapp
+	}
+	
+Gosub, Updater
+
+Start:
+	Gui, Destroy
+	Gui, Add, Tab3, x0 y0 w402 h320 , Start|Logging|About 
+	Gui, Add, Text,, Please put in the search Option:
+	Gui, Add, Edit, W240 vsearch, %search%
+	Gui, Add, Text,, Please put in the HTML Coins Adress:
+	Gui, Add, Edit, W280 vHTMLAdress, %HTMLAdress%
+	Gui, Add, Text,, Please choose how many Miners you want to run:
+	Gui, Add, DropDownList, vMiner Choose2 W50, 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32
+	Gui, Add, Text, W220 vMiners, Miners: OFF
+	Gui, Add, Button, vSTART default xm+10 ym+230, Start-Mining  
+	Gui, Add, Button, vSTOPP xm+190 ym+230, Stop-Mining
+	
+	Gui, Tab, 2
+	Gui, Add, Text,x290 y30 gLink1 vLink1, Open full Log...
+	Gui, Font, Underline cBlue
+	GuiControl, Font, Link1
+	Gui, Font, 
+	Gui, Add, Text,x10 y30 , Last Log:
+	Gui, Add, edit, vLoggTxt w370 h250 ReadOnly -WantCtrlA, 
+
+	Gui, Tab, 3
+	Gui, Font,
+	Gui, Add, Text,h10, `nWindows Miner Ver. %version% `n`nContact:
+	Gui, Add, Link,, <a href="mailto:BMP@gmx.de?subject=Windows Miner">BMP@gmx.de</a>
+	Gui, Add, Link,, <a href="https://t.me/joinchat/CQE0Qk0YOp2KjaLZnyxU5g">Telegram: HTMLCoin Mining GER</a>
+	Gui, Add, Text,h10, `nI make this App in my leisure time.`nPlease donate some HTML Coins for Beer. 
+	Gui, Add, Link,, <a href="https://html.mastercalls.io/address/HdTjPZuBtx6BTC6yKwkFPe1qtjyiizFWob">HdTjPZuBtx6BTC6yKwkFPe1qtjyiizFWob</a>
+	
+	Gui, Tab  
+	Gui, Show, ,HTMLCoin Miner Ver.: %version%
+	Pause
+	return
+
+
+	ButtonStart-Mining:
+		Gui, Submit  ; Save each control's contents to its associated variable.
+		IniWrite, %search%, Miner.ini, Option, search
+		IniWrite, %HTMLAdress%, Miner.ini, Option, HTMLAdress
+		
+		Gui, Show
+		if search between 999999 and 9999999
+			Gosub, Daemon
+		else
+			{
+			MsgBox, Search Option must be between 999999 and 9999999
+			Gosub, Start
+				pause
+			}
+		
+		
+	Daemon:
+		Gui, Font, cOrange 
+		GuiControl, Font, Miners
+		GuiControl,,Miners, Miners: Starting Daemon..
+		GuiControl,Hide, START, 
+		FileDelete, %appdata%\HTMLCOIN\debug.log
+		FormatTime, Date,, MM-dd-yyyy
+		FormatTime, Time, T8, hh:mm:ss 
+		FileAppend, Date:%Date% Time:%Time% - Start the Daemon`n, %Log%
+		Run, %A_ScriptDir%\htmlcoind.exe --par=16 --debug=1 --shrinkdebugfile --rpcthreads=%Miner%,, Hide
+		sleep 10000
+		Gosub, Connection
+		
+		
+	Connection:
+		Gui, Font, cOrange 
+		GuiControl, Font, Miners
+		GuiControl,,Miners, Miners: Check Connection...
+		FileDelete, %appdata%\HTMLCOIN\debug.log
+		SearchString=received
+		Line := False
+		
+		FormatTime, Date,, MM-dd-yyyy
+		FormatTime, Time, T8, hh:mm:ss 
+		FileAppend, Date:%Date% Time:%Time% - Check Connections`n, %Log%
+		Loop, Read, %appdata%\HTMLCOIN\debug.log
+		{
+			If !Trim(A_LoopReadLine)
+				Continue
+			If InStr(A_LoopReadLine, SearchString)
+				{
+					Line := A_LoopReadLine
+					Continue ;second concerned line
+				}
+			If Line
+				{
+					Line .= "`r`n" . A_LoopReadLine
+					break
+				}
+		}
+		if (Line = 0)
+			{
+			sleep 1000
+			Gosub, Connection
+			}
+		else
+			{
+			FormatTime, Date,, MM-dd-yyyy
+			FormatTime, Time, T8, hh:mm:ss 
+			FileAppend, Date:%Date% Time:%Time% - Connection found`n, %Log%
+			Loop, Read, %appdata%\HTMLCOIN\debug.log
+			GuiControl, Font, Miners
+			GuiControl,,Miners, Miners: Miners starting......
+			Gosub, StartMiner
+			sleep 2000
+			}
+	
+		
+	StartMiner:	
+		loop, %Miner%
+			{
+					Run, %A_ScriptDir%\Miner.exe %A_Index% %HTMLAdress% %search%,, Hide 		
+					FormatTime, Date,, MM-dd-yyyy
+					FormatTime, Time, T8, hh:mm:ss 
+					FileAppend, Date:%Date% Time:%Time% - Start Miner %A_Index%`n, %Log%
+					;Loop, Read, %appdata%\HTMLCOIN\debug.log
+					sleep 6000
+			}
+		Gui, Font, cGreen 
+		GuiControl, Font, Miners
+		GuiControl,,Miners, Miners: WORKING......
+		Gosub, looping
+		
+
+
+	ButtonStop-Mining:
+		FormatTime, Date,, MM-dd-yyyy
+		FormatTime, Time, T8, hh:mm:ss 
+		FileAppend, Date:%Date% Time:%Time% - Stopp Miner`n, %Log%
+		RunWait, %A_ScriptDir%\htmlcoin-cli.exe stop,, Hide
+		RunWait, %comspec% /c taskkill /F /IM Miner.exe,, Hide
+		RunWait, %comspec% /c taskkill /F /IM htmlcoin*,, Hide
+		Gui, Font, cGBlack 
+		GuiControl, Font, Miners
+		GuiControl,Show, START,
+		GuiControl,,Miners, Miners: Stopped.
+		Gosub ButtonCancel
+		
+
+		
+	Updater:
+		url := "http://nwa.marcusberger.de/VersionMiner.txt"
+
+		whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+		whr.Open("GET", url, true)
+		whr.Send()
+		; Using 'true' above and the call below allows the script to remain responsive.
+		whr.WaitForResponse()
+		version := whr.ResponseText
+		if (version = "0.0.83")
+			{
+			Gosub, Start
+			}
+			else
+			{
+			MsgBox,4,Update,  There is a newer Version %Version% of this Tool out!`n`nShould we download it now ?
+			IfMsgBox No
+				{
+				MsgBox,,WRONG ANSWER, Sorry, but this Version is outdated...`nTry it again....
+				ExitApp
+				}
+			IfMsgBox Yes
+				{
+				run, https://github.com/BMP0007/HTMLCoin-Windows-Miner/raw/master/MinerGUI.zip
+				MsgBox, 0,Update, Please Download it and replase the folder...
+				ExitApp
+				}
+			return
+			}
+				
+GuiEscape:
+GuiClose:
+ButtonCancel:
+
+		FormatTime, Date,, MM-dd-yyyy
+		FormatTime, Time, T8, hh:mm:ss 
+		FileAppend, Date:%Date% Time:%Time% - Stopp App`n, %Log%
+		Tooltip, Shutdown...
+		Run, %A_ScriptDir%\htmlcoin-cli.exe stop,, Hide
+		Run, %comspec% /c taskkill /F /IM Miner.exe,, Hide
+		Run, %comspec% /c taskkill /F /IM htmlcoin*,, Hide
+		FileDelete, %A_ScriptDir%\Miner-*.log
+		ExitApp		
+
+		Link1:
+		run, %A_ScriptDir%\Results.txt
+		return
+
+
+looping:
+			TXT := ""
+			LOG = %A_ScriptDir%\Results.txt
+			Found = %A_ScriptDir%\Found.txt
+			Fileread, Bingo, %Found%
+			FalsePos = "[ Date"
+			Loop, read, %LOG%
+					last_line := A_Index
+					if A_Index>32
+						{
+						Zahl = 32
+						}
+					else
+						{
+						Zahl = %last_line%
+						}
+					loop, %Zahl%
+					{
+						OLDLine := TXT
+						FileReadLine, last_lineTXT, %LOG%, %last_line%
+						StringSplit, TxtSP, last_lineTXT,[ ,
+						StringLen, laenge, TxtSP2
+						StringSplit, FO, TxtSP2,] ,
+						if laenge >= 3
+							{
+								ifInString, Fo1, %FalsePos%
+										Gosub, NIX
+								ifNotInString, Bingo, %Fo1%
+								{	
+										fou := "" . TxtSP2
+										StringSplit, found, fou,] ,
+										SplashTextOn,600,60,HTMLCOIN FOUND,We have a HIT:`n%found1%
+											Loop, 30
+												{
+													Gui, +AlwaysOnTop
+													WinSet, AlwaysOnTop, On, HTMLCOIN FOUND
+													Gui Flash
+													Sleep, 100
+												}
+										Gui, -AlwaysOnTop
+										WinMove, HTMLCOIN FOUND, , 0, 0 
+										FileAppend, %found1%, %Found%
+										sleep 30000
+										SplashTextOff
+								}
+							}
+						NIX:
+						TXT := "`n" . last_lineTXT . OLDLine
+						last_line--
+					}	
+														
+				GuiControl,,LoggTxt, %txt%
+				txt = ""
+				read = ""
+				sleep 30000
+				gosub, looping
+				
+				
+ende:
