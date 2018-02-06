@@ -1,4 +1,4 @@
-# HTMLCoin-Windows-Miner Version 0.0.81
+# HTMLCoin-Windows-Miner Version 0.0.83
 **htmlcoin-cli Version 2.0.1.0**
 
 Its only a **GUI** (grafic user interface) for the official (https://github.com/HTMLCOIN/HTMLCOIN/releases) **htmlcoin-cli.exe**.
@@ -25,7 +25,7 @@ Download: https://github.com/BMP0007/HTMLCoin-Windows-Miner/raw/master/MinerGUI.
 
 # I have open the SourceCode here.
 
-Everybudy can take a look into the Source Code here. 
+Everybody can take a look into the Source Code here. 
 The **MinerWindows** is the Main App (GUI) and the **Miner** is the worker.
 It is written in AHK and you can easy compile it self with the Compiler from: https://autohotkey.com/
 
